@@ -2,26 +2,28 @@
 
 namespace Core\Controller;
 
-use Exception;
-use App\Config\Config;
-use Core\Exceptions\ViewException;
-use Core\Exceptions\RouterException;
+use App\Traits\SortArray;
 
 abstract class BaseController{
+
+    use SortArray;
     
-    protected $params = [];
+    protected string|array $params;
     protected $layout = 'default';
 
-    public function render(string $filename,array $params = null) {
-        if(file_exists(Config::root() . DIRECTORY_SEPARATOR . 'app' .DIRECTORY_SEPARATOR .'views/'.$filename.'.php')){
+    public function render(string $filename, $params = null) { 
+        if(file_exists(ROOT . DIRECTORY_SEPARATOR . 'app' .DIRECTORY_SEPARATOR .'views/'.$filename.'.php')){
             ob_start();
-            $this->params = $params;
-            require Config::root() . 'app' .DIRECTORY_SEPARATOR .'views/'.$filename.'.php';
+            $this->params = !empty($params) ? $this->params = $params : [];
+            extract($this->params);
+            require ROOT . 'app' .DIRECTORY_SEPARATOR .'views/'.$filename.'.php';   
             $content = ob_get_clean();
-            require Config::root() .'app' .DIRECTORY_SEPARATOR .'views/layouts/'.$this->layout.'.php';
+            require ROOT .'app' .DIRECTORY_SEPARATOR .'views/layouts/'.$this->layout.'.php';
         }
+       
         else{
             dd('lol');
         }
     }
+
 }

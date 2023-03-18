@@ -2,6 +2,10 @@
 
 namespace App\Facades;
 
+use Core\Database\Database;
+
+
+
 class Query{
 
     public static function __callStatic($method, $arguments)
