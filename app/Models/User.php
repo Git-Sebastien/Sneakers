@@ -3,22 +3,17 @@
 namespace App\Models;
 
 use App\Traits\ArrayShift;
+use App\Traits\ObjectKeys;
 use App\Traits\SortArray;
 use Core\Model\Model;
 
-class User extends Model{
+class User extends Model {
 
     private int $id;
     private string $email;
     private string $password;
 
-    use ArrayShift,SortArray;
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->model = __CLASS__;
-    }
+    use ArrayShift,SortArray,ObjectKeys;
 
     /**
      * Get the value of password
@@ -80,42 +75,41 @@ class User extends Model{
         return $this;
     }
 
-    public function save()
+    public function save() :bool
     {
         $arrayProperty = $this->arrayShiftWithLevel(get_object_vars($this),3);
+        // dd($arrayProperty);
         $arrayPropertyModified = [];
         $accumulateProperty = null;
         $propertyName = null;
         $propertyValue = null;
-        $id = $this->statement[0]->id;
-        // dd($arrayProperty);
+
+
         if(count($arrayProperty) > 1 ){
             foreach($arrayProperty as $property => $value){
                 $arrayPropertyModified[$property] = [$property.'="'.$value.'"'];
             }
-            foreach($this->sortArray($arrayPropertyModified) as $key =>  $value){
+            foreach($this->sortArray($arrayPropertyModified) as $key => $value){
                 $accumulateProperty .= $value[0].',';   
-           }
-           
+            }
         }
 
-        // dd();
-    
+        // dd($accumulateProperty);
+ 
         $propertyName = array_keys($arrayProperty)[0];
         $propertyValue = '"'.array_values($arrayProperty)[0].'"';
 
         if(!empty($arrayProperty) && count($arrayProperty) > 1){
             $porpertyTrim = rtrim($accumulateProperty,',');
-            $query = "UPDATE users SET $porpertyTrim WHERE  id = $id ";
-            $this->statement =  $this->pdo->query($query)->execute();
+            
+            $query = "UPDATE users SET $porpertyTrim WHERE  id = 1 ";
+            // dd($this->pdo->query($query)->execute());
+            return $this->pdo->query($query)->execute();
         }
         else{
-                    
-            $query = "UPDATE users SET $propertyName = $propertyValue WHERE id = $id ";
-            $this->statement = $this->pdo->query($query)->execute();
+            $query = "UPDATE users SET $propertyName = $propertyValue WHERE id = 1 ";
+            // dd($this->pdo->query($query)->execute());
+            return $this->pdo->query($query)->execute();
         }
-        return $this->statement;
-        
-
     }
 }

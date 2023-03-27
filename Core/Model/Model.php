@@ -2,22 +2,19 @@
 
 namespace Core\Model;
 
-use PDO;
 use App\Models\User;
+use App\Traits\SortArray;
 use Core\Database\Database;
 
 class Model extends Database{
+    protected $data;
 
-    public function __construct(){
-
-        parent::__construct();
-    }
-
+    use SortArray;
 
     public function find(int $id)
     {
-        // dd($this->fetchMode());
-       return $this->statement = $this->pdo->query("SELECT * FROM users WHERE id=$id")->fetchAll($this->fetchMode(),$this->model);
-        
+        $this->query = $this->pdo->query("SELECT * FROM users WHERE id = $id");
+        $this->data =  $this->sortArray($this->query->fetchAll($this->fetchMode(),User::class));
+        return $this->data;
     }
 }

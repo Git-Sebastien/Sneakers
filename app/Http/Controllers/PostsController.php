@@ -7,11 +7,9 @@ use Core\Controller\BaseController;
 
 class PostsController extends BaseController{
 
-    public function index($id,$is,$email)
+    public function index($email,$id)
     {  
-        $user = Query::table('users')
-        ->select('id')
-        ->get();
-        return $this->render('posts',compact('user'));
+        // dd($id,$email);
+        return $this->render('posts');
     }
 }

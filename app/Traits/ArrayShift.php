@@ -5,7 +5,7 @@ namespace App\Traits;
 
 trait ArrayShift{
 
-    public function arrayShiftWithLevel(array $array, int $level)
+    public function arrayShiftWithLevel(array $array, int $level = 1)
     {
         for($i = 0; $i < $level; $i++){
             array_shift($array);
@@ -13,5 +13,4 @@ trait ArrayShift{
 
         return $array;
     }
-
 }

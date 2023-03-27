@@ -1,28 +1,31 @@
 <?php 
 namespace App\Http\Controllers;
 
-use Core\Model\Model;
 
   use App\Models\User;
-  use App\Facades\Query;
+  use App\Traits\GetClass;
   use App\Traits\SortArray;
   use Core\Controller\BaseController;
 
   class HomeController extends BaseController{
 
-      use SortArray;
+      use SortArray,GetClass;
 
       public function index($id)
       {
+        return  $this->render('home');
+      }
+
+      public function create()
+      {
+        return $this->render('home');
+      }
+
+      public function show($mail)
+      {
         $user = new User();
-        $user->find(1);
-        $password =  $user->setPassword("Ca marche");
-        $password =  $user->setEmail("Ca a l'air bon cette fois");
-        $user->save();
-        
 
+        return $this->render('show');
 
-        // dd($user->save(),$user);
-        return  $this->render('home',compact('user'));
       }
   }
