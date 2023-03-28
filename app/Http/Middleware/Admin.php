@@ -6,7 +6,7 @@ class Admin{
 
     public function handle($next,$request)
     {
-        $admin = false;
+        $admin = true;
         if($admin == false){
             return header('Location:/error');
             exit();

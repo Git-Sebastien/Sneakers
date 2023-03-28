@@ -8,5 +8,4 @@ $router->get('/','HomeController','create')->middleware('Admin');
 $router->get('/users/:email/:id','PostsController','index')->middleware('User');
 $router->get('/error','ErrorController','index');
 $router->get('/posts/:mail','HomeController','show')->middleware('Admin');
-// $router->get('/:id','HomeController','index');
 $router->run();

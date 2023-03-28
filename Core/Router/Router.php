@@ -98,6 +98,33 @@ class Router extends Route{
     //     return ;
     // }
 
+    public function getMiddleware($middleware,$controller,$action,$parameters)
+    {
+        $middleware_name = NAMESPACE_MIDDLEWARE . $middleware;
+        $middleware_instance = new $middleware_name();
+        $next = function() use ($controller, $action, $parameters) {
+            return call_user_func_array([$controller, $action], $parameters);
+        };
+        $middleware_instance->handle($next,http_response_code(302));
+    }
+
+    public function splitParameter(array $matches,string $uri)
+    {
+        if(!empty($matches)){
+            $parameter = preg_split('#/#',$uri);
+            foreach($parameter as $routeParameter){
+                if(str_contains($routeParameter,':')){
+                    $routeParameters[] = str_replace(':','',$routeParameter);
+                }
+            }
+            $sortMatches = $this->sortArray($matches);
+            array_shift($sortMatches);
+            $this->matches = $sortMatches;
+            $parameters = array_combine($routeParameters,$this->matches);
+        }
+        return $parameters ?? [];
+    }
+
     /**
      *Check the routes and return method if match happened
      * @return void
@@ -113,28 +140,10 @@ class Router extends Route{
             if($_SERVER['REQUEST_URI'] == $route->uri || preg_match_all($regex,$_SERVER['REQUEST_URI'],$matches,PREG_SET_ORDER)){ 
                 $controller_name = NAMESPACE_CONTROLLER . $route->controller_name;
                 $controller = new $controller_name();
-            
-                if(!empty($matches)){
-                    $parameter = preg_split('#/#',$route->uri);
-                    foreach($parameter as $routeParameter){
-                        if(str_contains($routeParameter,':')){
-                            $routeParameters[] = str_replace(':','',$routeParameter);
-                        }
-                    }
-                    $sortMatches = $this->sortArray($matches);
-                    array_shift($sortMatches);
-                    $this->matches = $sortMatches;
-                    $arrayOfParameter = array_combine($routeParameters,$this->matches);
-                }
+                $arrayOfParameter = $this->splitParameter($matches,$route->uri);
 
-                if(!empty($route->middleware)){
-                 
-                    $middleware_name = NAMESPACE_MIDDLEWARE . $route->middleware;
-                    $middleware = new $middleware_name();
-                    $next = function() use ($controller, $action, $arrayOfParameter) {
-                        return call_user_func_array([$controller, $action], $arrayOfParameter);
-                    };
-                    $middleware->handle($next,http_response_code(302));
+                if(!empty($route->middleware)){ 
+                    $this->getMiddleware($route->middleware,$controller,$action,$arrayOfParameter);
                 }
                 else{
                     return $controller->$action();
@@ -148,9 +157,7 @@ class Router extends Route{
             http_response_code(404);
             echo "La route demandé n'existent pas";
             return;
-
         }
-            
     }
 }
 
