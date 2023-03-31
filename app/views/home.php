@@ -1,4 +1,4 @@
 <?php 
 
-// dd($params['user']);
+// dd($users->getId());
 echo 'home';

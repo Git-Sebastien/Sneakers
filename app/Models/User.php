@@ -28,7 +28,7 @@ class User extends Model {
      *
      * @return  self
      */ 
-    public function setPassword(string $password) :User
+    public function setPassword(string $password) :self
     {
         $this->password = $password;
 
@@ -48,7 +48,7 @@ class User extends Model {
      *
      * @return  self
      */ 
-    public function setEmail(string $email) :User
+    public function setEmail(string $email) :self
     {
         $this->email = $email;
 
@@ -68,48 +68,15 @@ class User extends Model {
      *
      * @return  self
      */ 
-    public function setId(int $id) :User
+    public function setId(int $id) :self
     {
         $this->id = $id;
 
         return $this;
     }
 
-    public function save() :bool
-    {
-        $arrayProperty = $this->arrayShiftWithLevel(get_object_vars($this),3);
-        // dd($arrayProperty);
-        $arrayPropertyModified = [];
-        $accumulateProperty = null;
-        $propertyName = null;
-        $propertyValue = null;
-
-
-        if(count($arrayProperty) > 1 ){
-            foreach($arrayProperty as $property => $value){
-                $arrayPropertyModified[$property] = [$property.'="'.$value.'"'];
-            }
-            foreach($this->sortArray($arrayPropertyModified) as $key => $value){
-                $accumulateProperty .= $value[0].',';   
-            }
-        }
-
-        // dd($accumulateProperty);
- 
-        $propertyName = array_keys($arrayProperty)[0];
-        $propertyValue = '"'.array_values($arrayProperty)[0].'"';
-
-        if(!empty($arrayProperty) && count($arrayProperty) > 1){
-            $porpertyTrim = rtrim($accumulateProperty,',');
-            
-            $query = "UPDATE users SET $porpertyTrim WHERE  id = 1 ";
-            // dd($this->pdo->query($query)->execute());
-            return $this->pdo->query($query)->execute();
-        }
-        else{
-            $query = "UPDATE users SET $propertyName = $propertyValue WHERE id = 1 ";
-            // dd($this->pdo->query($query)->execute());
-            return $this->pdo->query($query)->execute();
-        }
-    }
+    // public function getVars()
+    // {
+    //     return get_object_vars($this);
+    // }
 }

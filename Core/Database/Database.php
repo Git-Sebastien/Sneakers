@@ -8,13 +8,16 @@ class Database {
 
     protected PDO $pdo;
 
+    protected $query;
+
+    protected $statement;
+
+    protected string $model;
+
     public string  $table;
 
     public string $field;
 
-    protected $query;
-
-    protected string $model;
 
     public function __construct()
     {
@@ -23,15 +26,15 @@ class Database {
 
     public function getPDO() :PDO 
     {
-            $settings = require ROOT .'app'. DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'database.php';
-                $this->pdo = new PDO('mysql:host='.$settings["db_host"].';dbname='.$settings["db_name"].';',$settings["db_user"],$settings["db_password"],[
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ
-                ]);
-        
-            if(!is_null($this->query)) $this->query->setFetchMode(PDO::FETCH_CLASS,$this->model); 
+        $settings = require ROOT .'app'. DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'database.php';
+            $this->pdo = new PDO('mysql:host='.$settings["db_host"].';dbname='.$settings["db_name"].';',$settings["db_user"],$settings["db_password"],[
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ
+            ]);
+    
+        if(!is_null($this->query)) $this->query->setFetchMode(PDO::FETCH_CLASS,$this->model); 
 
-            return $this->pdo;
+        return $this->pdo;
     }
 
     public function select(string|array $column = ['*'])

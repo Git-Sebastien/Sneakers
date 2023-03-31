@@ -11,7 +11,7 @@ trait SortArray {
 
         foreach($array as $value) {
             if(count($array) > 1){
-                $valueToReturn[] = $value;
+                $valueToReturn[]= $value;
             }
             else{
                 $valueToReturn = $value;

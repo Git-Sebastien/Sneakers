@@ -13,7 +13,9 @@ namespace App\Http\Controllers;
 
       public function index($id)
       {
-        return  $this->render('home');
+        $user = new User();
+        $user->find($id);
+        return $this->render('home');
       }
 
       public function create()
