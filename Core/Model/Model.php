@@ -13,6 +13,7 @@ class Model extends Database{
     protected $data;
     protected $props;   
     protected array $arrayParameter;
+    protected $objectVars;
 
     use SortArray,StrPlural,ArrayShift;
 
@@ -24,7 +25,6 @@ class Model extends Database{
 
         public function find(int $id)
         {
-            // $this->setId($id);
             $reflection = new ReflectionClass(get_called_class());
             $tableToLower = lcfirst($reflection->getShortName());
             $this->table = $this->strPlural($tableToLower);
@@ -34,7 +34,9 @@ class Model extends Database{
             $this->query->execute([
                 'id' => $id
             ]);
-            $this->data = $this->sortArray($this->query->fetchAll());  
+            $this->data = $this->sortArray($this->query->fetchAll());
+            // $this->data->setId($id); 
+            // dd($this->data->getId());
         }
 
         public function getObject(Model $obj)
@@ -52,14 +54,27 @@ class Model extends Database{
                 // dd($result);
                 return $result;
          }
-
-        public function getProperty($user)
+        
+        
+        /**
+         * getPropertyValue
+         *
+         * @param  mixed $user
+         * @param  mixed $parameter 
+         * @return void
+         */
+        public function getPropertyValue($user,$parameter = "array")
         {
-            // dd($user);
             $arrayProperty = [];
             $datas = $this->getObject($user);
+
             foreach($datas as $key => $data){
-                $arrayProperty[$key] = $data;
+                if($parameter == "array"){
+                    $arrayProperty[$key] = $data;
+                }
+                elseif($parameter == 'key'){
+                    $arrayProperty[] = $key; 
+                }
             }
             return $arrayProperty;
          }
@@ -70,19 +85,22 @@ class Model extends Database{
             $arrayProperty = [];
             $accumulateParameter = '';
             $accumulateProperty = '';
-            $property = $this->getProperty($user);
+
+            if(isset($user)){
+                $property = $this->getPropertyValue($user);
+            }
+
             $lastId = $this->pdo->query("SELECT MAX(id) as lastId FROM users")->fetch();
             $user->setId($lastId->lastId + 1);
-            // dd($user->getId());
-            // $property['id'] += 1;
             foreach($property as $key => $data){
                 $arrayProperty[$key] = $data;
                 $accumulateParameter.= ':'. $key.',';
                 $accumulateProperty .= $key.',';
             }
+
             $parameterTrim = trim($accumulateParameter,',');
             $propertyTrim = trim($accumulateProperty,',');
-            // dd($parameterTrim);
+
             $this->query = "INSERT INTO $this->table ($propertyTrim) VALUES ($parameterTrim)";
 
             $this->statement = $this->pdo->prepare($this->query);
@@ -91,7 +109,6 @@ class Model extends Database{
 
             foreach($property as $attribut => $data) {
                 $arrayOfMethod[] = $prefix.ucfirst($attribut);                
-                $propertyValues = [];
 
                 foreach($arrayOfMethod as $key => $method) {
                     $this->arrayParameter[$attribut] = $user->$method(); 
@@ -100,23 +117,40 @@ class Model extends Database{
         }
 
         public function update($user)
-        {  
+        {
+            $prefix = 'get';
+            $arrayParameter = [];
             $accumulateProperty = '';
-            $arrayProperty= [];
-            $property = $this->getProperty($user);
-            foreach($property as $key => $data){
-                $accumulateProperty .=  $key.'="'.$data[0].'",'; 
+            $properties = $user->getVars();
+
+            if($user){
+                $property = $this->getPropertyValue($user,"key");
             }
-            $accumulatePropertyTrim = trim($accumulateProperty,',');
-            $this->query = "UPDATE $this->table SET $accumulatePropertyTrim";
+
+            $common = array_intersect(array_keys($properties),$property);
+            foreach($common as $getter){
+                $method = $prefix.ucfirst($getter);
+                $arrayParameter[$getter] = $user->$method();
+                $accumulateProperty .= $getter.' = :'.$getter.',';
+            }
+            // dd($properties);
+
+            $idUser = $this->data->getId();
+            $propertyTrim = trim($accumulateProperty,',');
+            $this->query = "UPDATE $this->table SET $propertyTrim WHERE id = $idUser";
+            $this->statement = $this->pdo->prepare($this->query);
+            $this->arrayParameter = $arrayParameter;
+
+        }
+
+        protected function getObjectVars($object)
+        {
+            return get_object_vars($object);
         }
 
         public function save()
         {
             //Tout premier code de la méthode que je garde de coté ou cas ou 
-         
-
-
             // $arrayProperty = $this->arrayShiftWithLevel(get_object_vars($this),4);
             // $arrayPropertyModified = [];
             // $accumulateProperty = null;
@@ -151,7 +185,6 @@ class Model extends Database{
             // foreach ($this->arrayParameter as $key => $value) {
             //     $this->statement->bindParam(':' . $key, $value);
             // }
-
             $this->statement->execute($this->arrayParameter);
             
         } 

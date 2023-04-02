@@ -1,6 +1,8 @@
 <?php 
 namespace App\Http\Controllers;
 
+use App\Models\Post;
+
 
   use App\Models\User;
   use App\Traits\GetClass;
@@ -13,8 +15,16 @@ namespace App\Http\Controllers;
 
       public function index($id)
       {
-        $user = new User();
-        $user->find($id);
+        $post = new Post();
+        $post->find($id);
+        $post->setAuthor('Plus Mark ni Peter mais Jean');
+        $post->update($post);
+        $post->save();
+        // $user = new User();
+        // $user->find($id);
+        // $user->setEmail('new mail');
+        // $user->update($user);
+
         return $this->render('home');
       }
 
