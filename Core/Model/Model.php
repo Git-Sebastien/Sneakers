@@ -15,7 +15,7 @@ class Model extends Database{
     protected array $arrayParameter;
     protected $objectVars;
 
-    use SortArray,StrPlural,ArrayShift;
+    use SortArray,ArrayShift;
 
         public function __construct()
         {
@@ -23,35 +23,27 @@ class Model extends Database{
             $this->model = get_class($this);
         }
 
-        public function find(int $id)
+        public function getObject($obj)
         {
-            $reflection = new ReflectionClass(get_called_class());
-            $tableToLower = lcfirst($reflection->getShortName());
-            $this->table = $this->strPlural($tableToLower);
-
-            $this->query = $this->pdo->prepare("SELECT * FROM $this->table  WHERE id =:id");
-            $this->query->setFetchMode($this->fetchMode(),$this->model);
-            $this->query->execute([
-                'id' => $id
-            ]);
-            $this->data = $this->sortArray($this->query->fetchAll());
-            // $this->data->setId($id); 
-            // dd($this->data->getId());
-        }
-
-        public function getObject(Model $obj)
-        {
-            // dd($obj);
+            $this->objectVars = $obj->getVars();
+            $objectPropertiesKeys = [];
             $prefix = "get";
                 $reflection = new ReflectionClass($obj);
                 $properties = $reflection->getProperties(ReflectionProperty::IS_PRIVATE);
-                $result = [];
-                foreach ($properties as $property) {
-                    $getter = $prefix.$property->getName();
-                $property->setAccessible(true);
-                $result[$property->getName()] = $obj->data->$getter();
+                
+                foreach($properties as $key => $objectProperty){
+                    $objectPropertiesKeys[] = $objectProperty->name;
                 }
-                // dd($result);
+
+                $common = array_intersect($objectPropertiesKeys,array_keys($this->objectVars));
+
+                array_shift($properties);
+                $result = [];
+                foreach ($common as $property) {
+                    $getter = $prefix.ucfirst($property);
+                    $result[$property] = $obj->$getter();
+                }
+
                 return $result;
          }
         
@@ -67,7 +59,7 @@ class Model extends Database{
         {
             $arrayProperty = [];
             $datas = $this->getObject($user);
-
+            // dd($datas);
             foreach($datas as $key => $data){
                 if($parameter == "array"){
                     $arrayProperty[$key] = $data;
@@ -78,25 +70,41 @@ class Model extends Database{
             }
             return $arrayProperty;
          }
+
+
+         public function find(int $id)
+         {
+         
+             $this->query = $this->pdo->prepare("SELECT * FROM $this->table  WHERE id =:id");
+
+             $this->query->setFetchMode($this->fetchMode(),$this->model);
+             $this->query->execute([
+                 'id' => $id
+             ]);
+     
+             $this->data = $this->sortArray($this->query->fetchAll());
+            //  dd($this->data);
+             $this->idUser = $this->data->getId();
+         }
     
 
-        public function create($user)
+        public function create($user)  //Insert new model in database
         {  
-            $arrayProperty = [];
+            $getter = '';
             $accumulateParameter = '';
             $accumulateProperty = '';
-
             if(isset($user)){
-                $property = $this->getPropertyValue($user);
+                $properties = $this->getObject($user);
             }
-
             $lastId = $this->pdo->query("SELECT MAX(id) as lastId FROM users")->fetch();
             $user->setId($lastId->lastId + 1);
-            foreach($property as $key => $data){
+
+            foreach($properties as $key => $data){
                 $arrayProperty[$key] = $data;
                 $accumulateParameter.= ':'. $key.',';
                 $accumulateProperty .= $key.',';
             }
+            // dd($arrayProperty,$accumulateParameter,$accumulateProperty);
 
             $parameterTrim = trim($accumulateParameter,',');
             $propertyTrim = trim($accumulateProperty,',');
@@ -104,15 +112,12 @@ class Model extends Database{
             $this->query = "INSERT INTO $this->table ($propertyTrim) VALUES ($parameterTrim)";
 
             $this->statement = $this->pdo->prepare($this->query);
-            $arrayOfMethod = [];
+          
             $prefix = 'get';
 
-            foreach($property as $attribut => $data) {
-                $arrayOfMethod[] = $prefix.ucfirst($attribut);                
-
-                foreach($arrayOfMethod as $key => $method) {
-                    $this->arrayParameter[$attribut] = $user->$method(); 
-                }
+            foreach($properties as $attribut => $data) {
+                $getter = $prefix.ucfirst($attribut);
+                $this->arrayParameter[$attribut] = $user->$getter();              
             }
         }
 
@@ -122,25 +127,32 @@ class Model extends Database{
             $arrayParameter = [];
             $accumulateProperty = '';
             $properties = $user->getVars();
-
             if($user){
                 $property = $this->getPropertyValue($user,"key");
             }
 
             $common = array_intersect(array_keys($properties),$property);
-            foreach($common as $getter){
+
+            foreach($common as $getter){  //Build array to get parameter to execute the query
                 $method = $prefix.ucfirst($getter);
                 $arrayParameter[$getter] = $user->$method();
                 $accumulateProperty .= $getter.' = :'.$getter.',';
             }
-            // dd($properties);
 
             $idUser = $this->data->getId();
             $propertyTrim = trim($accumulateProperty,',');
             $this->query = "UPDATE $this->table SET $propertyTrim WHERE id = $idUser";
             $this->statement = $this->pdo->prepare($this->query);
             $this->arrayParameter = $arrayParameter;
+        }
 
+        public function delete($id)
+        {
+            $this->query = "DELETE FROM $this->table WHERE id = :id ";
+            $this->statement = $this->pdo->prepare($this->query);
+            $this->statement->execute([
+                'id' => $id
+            ]);
         }
 
         protected function getObjectVars($object)
@@ -150,42 +162,6 @@ class Model extends Database{
 
         public function save()
         {
-            //Tout premier code de la méthode que je garde de coté ou cas ou 
-            // $arrayProperty = $this->arrayShiftWithLevel(get_object_vars($this),4);
-            // $arrayPropertyModified = [];
-            // $accumulateProperty = null;
-            // $propertyName = null;
-            // $propertyValue = null;
-
-            // if(count($arrayProperty) > 1 ){
-            //     foreach($arrayProperty as $property => $value){
-            //         $arrayPropertyModified[$property] = [$property.'="'.$value.'"'];
-            //     }
-            //     foreach($this->sortArray($arrayPropertyModified) as $key => $value){
-            //         $accumulateProperty .= $value[0].',';   
-            //     }
-            // }
-            // $propertyName = array_keys($arrayProperty)[0];
-            // $propertyValue = '"'.array_values($arrayProperty)[0].'"';
-            //     if(!empty($arrayProperty) && count($arrayProperty) > 1){
-            //         $porpertyTrim = rtrim($accumulateProperty,',');
-                    
-            //         $query = "UPDATE users SET $porpertyTrim WHERE  id = 1 ";
-            //         // dd($this->pdo->query($query)->execute());
-            //         return $this->pdo->query($query)->execute();
-            //     }
-            //     else{
-            //         $query = "UPDATE users SET $propertyName = $propertyValue WHERE id = 1 ";
-            //         // dd($this->pdo->query($query)->execute());
-            //         return $this->pdo->query($query)->execute();
-            //     }
-            // $statement = $this->pdo->prepare($this->query);
-            // $statement->setFetchMode($this->fetchMode(),$this->model);
-            // array_shift($this->arrayParameter);
-            // foreach ($this->arrayParameter as $key => $value) {
-            //     $this->statement->bindParam(':' . $key, $value);
-            // }
-            $this->statement->execute($this->arrayParameter);
-            
+             $this->statement->execute($this->arrayParameter);            
         } 
 }

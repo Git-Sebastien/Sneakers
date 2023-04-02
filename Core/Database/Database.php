@@ -3,8 +3,12 @@
 namespace Core\Database;
 
 use PDO;
+use ReflectionClass;
+use App\Traits\StrPlural;
 
 class Database {
+
+    use StrPlural;
 
     protected PDO $pdo;
 
@@ -14,7 +18,9 @@ class Database {
 
     protected string $model;
 
-    public string  $table;
+    protected int $idUser;
+
+    public string $table;
 
     public string $field;
 
@@ -22,6 +28,7 @@ class Database {
     public function __construct()
     {
         $this->pdo = $this->getPDO();
+        $this->getTableName();
     }
 
     public function getPDO() :PDO 
@@ -32,7 +39,7 @@ class Database {
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ
             ]);
     
-        if(!is_null($this->query)) $this->query->setFetchMode(PDO::FETCH_CLASS,$this->model); 
+        // if(!is_null($this->query)) $this->query->setFetchMode(PDO::FETCH_CLASS,$this->model); 
 
         return $this->pdo;
     }
@@ -44,10 +51,12 @@ class Database {
         return $this;
     }
 
-    public function table(string $table)
+
+    public function getTableName()
     {
-        $this->table = $table;
-        return $this;
+        $reflection = new ReflectionClass(get_called_class());
+        $tableToLower = lcfirst($reflection->getShortName());
+        $this->table = $this->strPlural($tableToLower);
     }
 
 

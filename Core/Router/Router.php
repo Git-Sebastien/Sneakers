@@ -63,7 +63,7 @@ class Router extends Route{
      * @return Router
      */
     public function get(string $uri,string $controller_name,string $controller_method)
-    {
+    {        
         $route = RouteFactory::create($uri,$controller_name,$controller_method);
         $this->routes[] = $route;
    
@@ -82,21 +82,6 @@ class Router extends Route{
 
         return $this;
     }
-
-    // public function checkParameter($controller,$method,$class,$arguments)
-    // {
-    //     $reflection  = new ReflectionClass($class);
-    //     $parameters = $reflection->getMethod($method)->getParameters();
-    //     foreach($arguments as $argument){
-    //         foreach($parameters as $parameter){
-    //             if(empty($parameters)){
-    //                 die("Les paramétres de la méthode $method sont manquant");
-    //             }
-    //         }
-    //     }
-  
-    //     return ;
-    // }
 
     public function getMiddleware($middleware,$controller,$action,$parameters)
     {
@@ -151,8 +136,7 @@ class Router extends Route{
             }
             $this->match = true;
         }   
-
-                
+            
         if(!$this->match){
             http_response_code(404);
             echo "La route demandé n'existent pas";

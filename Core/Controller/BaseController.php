@@ -2,17 +2,15 @@
 
 namespace Core\Controller;
 
-use ArrayObject;
 use App\Traits\SortArray;
-use ReflectionFunction;
-use ReflectionMethod;
+
 
 abstract class BaseController{
 
     use SortArray;
     
     protected array $params;
-    protected $layout = 'default';
+    protected string $layout = 'default';
 
     public function render(string $filename, $params = null) { 
 

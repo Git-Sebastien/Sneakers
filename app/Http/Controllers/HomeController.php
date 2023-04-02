@@ -17,27 +17,19 @@ use App\Models\Post;
       {
         $post = new Post();
         $post->find($id);
-        $post->setAuthor('Plus Mark ni Peter mais Jean');
-        $post->update($post);
-        $post->save();
-        // $user = new User();
-        // $user->find($id);
-        // $user->setEmail('new mail');
-        // $user->update($user);
-
+        $post->delete($id);
         return $this->render('home');
       }
 
       public function create()
       {
+
         return $this->render('home');
       }
 
       public function show($mail)
       {
-        $user = new User();
 
         return $this->render('show');
-
       }
   }

@@ -75,7 +75,7 @@ class User extends Model {
         return $this;
     }
 
-    protected function getVars()
+    public function getVars()
     {
         return get_object_vars($this);
     }
